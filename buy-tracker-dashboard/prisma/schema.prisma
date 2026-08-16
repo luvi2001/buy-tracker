@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OverallStatus {
+  COMPLETE
+  IN_PROGRESS
+  BLOCKED
+  NOT_STARTED
+  OVERDUE
+}
+
+enum StepStatus {
+  DONE
+  IN_PROGRESS
+  PENDING
+  BLOCKED
+}
+
+// One row = one row in the TRACKER sheet
+model Order {
+  id            String        @id @default(cuid())
+  buyOrderName  String
+  responsible   String?
+  buyQty        Int           @default(0)
+  totalSO       Int           @default(0)
+  totalFG       Int           @default(0)
+  refActiveFG   String?
+  deadline      DateTime?
+  overallStatus OverallStatus @default(NOT_STARTED)
+  remarks       String?
+
+  steps         Step[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([overallStatus])
+}
+
+// One row = one of the 6 fixed steps for a given order
+// (① ACTIVE SO & FG CREATION ... ⑥ PO), matching the TRACKER column pairs
+model Step {
+  id         String     @id @default(cuid())
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+
+  stepNumber Int        // 1-6
+  stepName   String      // e.g. "ACTIVE SO & FG CREATION"
+  dateDone   DateTime?
+  status     StepStatus @default(PENDING)
+
+  @@unique([orderId, stepNumber])
+  @@index([orderId])
+}
