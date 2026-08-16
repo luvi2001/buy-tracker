@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 // GET /api/orders/:id
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const order = await prisma.order.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { steps: { orderBy: { stepNumber: "asc" } } },
   });
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -19,14 +20,15 @@ export async function GET(
 // { stepNumber, status, dateDone } to update individual step progress.
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const body = await req.json();
+  const { id } = await params;
 
   const { steps, deadline, ...rest } = body;
 
   const order = await prisma.order.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...rest,
       ...(deadline !== undefined
@@ -39,7 +41,7 @@ export async function PATCH(
     for (const s of steps) {
       await prisma.step.update({
         where: {
-          orderId_stepNumber: { orderId: params.id, stepNumber: s.stepNumber },
+          orderId_stepNumber: { orderId: id, stepNumber: s.stepNumber },
         },
         data: {
           status: s.status,
@@ -60,8 +62,9 @@ export async function PATCH(
 // DELETE /api/orders/:id
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  await prisma.order.delete({ where: { id: params.id } });
+  const { id } = await params;
+  await prisma.order.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
