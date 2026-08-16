@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { STEP_NAMES } from "@/lib/steps";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/dashboard - the numbers behind the DASHBOARD sheet:
 // totals, status breakdown, active orders per step, items needing attention.
 export async function GET() {
