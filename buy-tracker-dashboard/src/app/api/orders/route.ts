@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { STEP_NAMES } from "@/lib/steps";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/orders - list every order with its 6 steps, newest first
 export async function GET() {
   const orders = await prisma.order.findMany({
